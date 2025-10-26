@@ -1,10 +1,14 @@
 use crate::adapters::api::error::ApiError;
 use crate::adapters::api::models::{
-    ExecuteRequest, ExecuteResponse, HealthResponse, LanguagesResponse, MetadataResponse,
+    BoxFileResponse, BoxFilesResponse, CleanupResponse, ExecuteRequest, ExecuteResponse,
+    HealthResponse, LanguagesResponse, MetadataResponse,
 };
 use crate::domain::entities::ExecutionRequest as DomainExecutionRequest;
-use crate::use_cases::{ExecuteCodeUseCase, HealthCheckUseCase, ListLanguagesUseCase};
-use axum::extract::State;
+use crate::use_cases::{
+    CleanupBoxUseCase, ExecuteCodeUseCase, GetBoxFileUseCase, HealthCheckUseCase,
+    ListBoxFilesUseCase, ListLanguagesUseCase,
+};
+use axum::extract::{Path, State};
 use axum::Json;
 use std::sync::Arc;
 
@@ -12,6 +16,9 @@ pub struct AppState {
     pub execute_code_use_case: Arc<ExecuteCodeUseCase>,
     pub list_languages_use_case: Arc<ListLanguagesUseCase>,
     pub health_check_use_case: Arc<HealthCheckUseCase>,
+    pub list_box_files_use_case: Arc<ListBoxFilesUseCase>,
+    pub get_box_file_use_case: Arc<GetBoxFileUseCase>,
+    pub cleanup_box_use_case: Arc<CleanupBoxUseCase>,
 }
 
 /// Health check endpoint
@@ -92,6 +99,87 @@ pub async fn execute_code_handler(
             exit_code: result.metadata.exit_code,
             status: result.metadata.status,
         },
+        box_id: result.box_id,
+    }))
+}
+
+/// List files in a sandbox box
+///
+/// Returns a list of files in the specified sandbox box
+#[utoipa::path(
+    get,
+    path = "/boxes/{box_id}/files",
+    params(
+        ("box_id" = u32, Path, description = "Box ID to list files from")
+    ),
+    responses(
+        (status = 200, description = "List of files in the box", body = BoxFilesResponse),
+        (status = 500, description = "Internal server error"),
+    ),
+    tag = "Box Management"
+)]
+pub async fn list_box_files_handler(
+    State(state): State<Arc<AppState>>,
+    Path(box_id): Path<u32>,
+) -> Result<Json<BoxFilesResponse>, ApiError> {
+    let files = state.list_box_files_use_case.execute(box_id).await?;
+
+    Ok(Json(BoxFilesResponse { files }))
+}
+
+/// Get a file from a sandbox box
+///
+/// Returns the content of a specific file from the sandbox box
+#[utoipa::path(
+    get,
+    path = "/boxes/{box_id}/files/{filename}",
+    params(
+        ("box_id" = u32, Path, description = "Box ID to get file from"),
+        ("filename" = String, Path, description = "Name of the file to retrieve")
+    ),
+    responses(
+        (status = 200, description = "File content (base64 encoded)", body = BoxFileResponse),
+        (status = 500, description = "Internal server error"),
+    ),
+    tag = "Box Management"
+)]
+pub async fn get_box_file_handler(
+    State(state): State<Arc<AppState>>,
+    Path((box_id, filename)): Path<(u32, String)>,
+) -> Result<Json<BoxFileResponse>, ApiError> {
+    let content_bytes = state
+        .get_box_file_use_case
+        .execute(box_id, &filename)
+        .await?;
+
+    let content = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, content_bytes);
+
+    Ok(Json(BoxFileResponse { content, filename }))
+}
+
+/// Cleanup a sandbox box
+///
+/// Cleans up the specified sandbox box and releases it back to the pool
+#[utoipa::path(
+    delete,
+    path = "/boxes/{box_id}",
+    params(
+        ("box_id" = u32, Path, description = "Box ID to cleanup")
+    ),
+    responses(
+        (status = 200, description = "Box cleaned up successfully", body = CleanupResponse),
+        (status = 500, description = "Internal server error"),
+    ),
+    tag = "Box Management"
+)]
+pub async fn cleanup_box_handler(
+    State(state): State<Arc<AppState>>,
+    Path(box_id): Path<u32>,
+) -> Result<Json<CleanupResponse>, ApiError> {
+    state.cleanup_box_use_case.execute(box_id).await?;
+
+    Ok(Json(CleanupResponse {
+        message: format!("Box {} cleaned up successfully", box_id),
     }))
 }
 

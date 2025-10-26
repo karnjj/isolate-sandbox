@@ -17,6 +17,8 @@ pub struct ExecuteResponse {
     pub stderr: String,
     /// Execution metadata
     pub metadata: MetadataResponse,
+    /// Box ID used for execution
+    pub box_id: u32,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -49,5 +51,25 @@ pub struct LanguagesResponse {
 pub struct ErrorResponse {
     /// Error message
     pub error: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct BoxFilesResponse {
+    /// List of files in the box
+    pub files: Vec<String>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct BoxFileResponse {
+    /// File content (base64 encoded)
+    pub content: String,
+    /// Filename
+    pub filename: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct CleanupResponse {
+    /// Success message
+    pub message: String,
 }
 

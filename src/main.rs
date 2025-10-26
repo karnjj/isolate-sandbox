@@ -9,7 +9,10 @@ use config::Config;
 use domain::repositories::LanguageRepository;
 use external::repositories::FileSystemLanguageRepository;
 use external::services::{CompilerServiceImpl, IsolateSandboxService};
-use use_cases::{ExecuteCodeUseCase, HealthCheckUseCase, ListLanguagesUseCase};
+use use_cases::{
+    CleanupBoxUseCase, ExecuteCodeUseCase, GetBoxFileUseCase, HealthCheckUseCase,
+    ListBoxFilesUseCase, ListLanguagesUseCase,
+};
 
 use std::sync::Arc;
 
@@ -56,16 +59,22 @@ async fn main() -> anyhow::Result<()> {
     let execute_code_use_case = Arc::new(ExecuteCodeUseCase::new(
         language_repo.clone(),
         compiler_service,
-        sandbox_service,
+        sandbox_service.clone(),
     ));
     let list_languages_use_case = Arc::new(ListLanguagesUseCase::new(language_repo));
     let health_check_use_case = Arc::new(HealthCheckUseCase::new());
+    let list_box_files_use_case = Arc::new(ListBoxFilesUseCase::new(sandbox_service.clone()));
+    let get_box_file_use_case = Arc::new(GetBoxFileUseCase::new(sandbox_service.clone()));
+    let cleanup_box_use_case = Arc::new(CleanupBoxUseCase::new(sandbox_service));
 
     // Create app state
     let app_state = Arc::new(AppState {
         execute_code_use_case,
         list_languages_use_case,
         health_check_use_case,
+        list_box_files_use_case,
+        get_box_file_use_case,
+        cleanup_box_use_case,
     });
 
     // Create router
