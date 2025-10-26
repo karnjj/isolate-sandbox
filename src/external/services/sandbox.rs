@@ -218,13 +218,13 @@ impl SandboxService for IsolateSandboxService {
         let metadata_content = self.file_system.read_to_string(&config.metadata_path).await?;
         let metadata = self.parse_metadata(&metadata_content);
 
-        // Cleanup sandbox
-        self.cleanup_sandbox(config.box_id).await?;
+        // Note: Cleanup is now deferred and must be called explicitly via cleanup endpoint
 
         Ok(SandboxExecutionResult {
             stdout,
             stderr,
             metadata,
+            box_id: config.box_id,
         })
     }
 
@@ -234,6 +234,60 @@ impl SandboxService for IsolateSandboxService {
 
     async fn release_box_id(&self, box_id: u32) -> DomainResult<()> {
         self.box_pool.release(box_id).await
+    }
+
+    async fn list_files(&self, box_id: u32) -> DomainResult<Vec<String>> {
+        let box_path = PathBuf::from(format!("/var/lib/isolate/{}/box", box_id));
+        
+        let box_path_str = box_path
+            .to_str()
+            .ok_or_else(|| DomainError::Internal("Invalid box path".to_string()))?;
+
+        let (stdout, stderr, exit_code) = self
+            .process_executor
+            .execute_command("sudo", &["ls", "-1", box_path_str])
+            .await?;
+
+        if exit_code != 0 {
+            return Err(DomainError::SandboxError(format!(
+                "Failed to list files in box: {}",
+                stderr
+            )));
+        }
+
+        let files: Vec<String> = stdout
+            .lines()
+            .filter(|line| !line.is_empty())
+            .map(|line| line.to_string())
+            .collect();
+
+        Ok(files)
+    }
+
+    async fn get_file(&self, box_id: u32, filename: &str) -> DomainResult<Vec<u8>> {
+        let file_path = PathBuf::from(format!("/var/lib/isolate/{}/box/{}", box_id, filename));
+        
+        let file_path_str = file_path
+            .to_str()
+            .ok_or_else(|| DomainError::Internal("Invalid file path".to_string()))?;
+
+        let (stdout, stderr, exit_code) = self
+            .process_executor
+            .execute_command("sudo", &["cat", file_path_str])
+            .await?;
+
+        if exit_code != 0 {
+            return Err(DomainError::SandboxError(format!(
+                "Failed to read file from box: {}",
+                stderr
+            )));
+        }
+
+        Ok(stdout.into_bytes())
+    }
+
+    async fn cleanup(&self, box_id: u32) -> DomainResult<()> {
+        self.cleanup_sandbox(box_id).await
     }
 }
 
