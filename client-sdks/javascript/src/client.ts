@@ -16,6 +16,7 @@ import { IsolateSandboxError } from './errors.js';
 export class IsolateSandboxClient {
   private readonly baseUrl: string;
   private readonly timeout: number;
+  private readonly apiKey?: string;
 
   /**
    * Creates a new IsolateSandbox client
@@ -24,6 +25,7 @@ export class IsolateSandboxClient {
   constructor(config: IsolateSandboxConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, ''); // Remove trailing slash
     this.timeout = config.timeout ?? 30000;
+    this.apiKey = config.apiKey;
   }
 
   /**
@@ -38,13 +40,20 @@ export class IsolateSandboxClient {
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
+      const headers: Record<string, any> = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      };
+
+      // Add API key header if provided
+      if (this.apiKey) {
+        headers['X-API-Key'] = this.apiKey;
+      }
+
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
+        headers,
       });
 
       clearTimeout(timeoutId);

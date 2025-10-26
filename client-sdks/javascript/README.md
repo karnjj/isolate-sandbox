@@ -35,6 +35,8 @@ import { IsolateSandboxClient } from '@isolate-sandbox/client';
 // Create a client instance
 const client = new IsolateSandboxClient({
   baseUrl: 'http://localhost:3000',
+  // Optional: Provide API key if your server requires authentication
+  apiKey: process.env.ISOLATE_SANDBOX_API_KEY,
 });
 
 // Execute some Python code
@@ -60,6 +62,7 @@ const client = new IsolateSandboxClient(config: IsolateSandboxConfig);
 
 - `baseUrl` (string, required): Base URL of the IsolateSandbox API
 - `timeout` (number, optional): Request timeout in milliseconds (default: 30000)
+- `apiKey` (string, optional): API key for authentication (sent as `X-API-Key` header)
 
 ### Methods
 
@@ -177,6 +180,32 @@ console.log(result.message); // "Box 1 cleaned up successfully"
 - `boxId` (number): Box ID to cleanup
 
 **Returns:** `Promise<CleanupResponse>`
+
+## Authentication
+
+If your IsolateSandbox API server requires authentication, you can provide an API key:
+
+```typescript
+const client = new IsolateSandboxClient({
+  baseUrl: 'http://localhost:3000',
+  apiKey: 'your-api-key-here',
+});
+```
+
+The API key will be automatically sent as the `X-API-Key` header with all requests (except `/health` endpoint which is typically unauthenticated).
+
+**Setting up API Key on the Server:**
+
+Set the `ISOLATE_SANDBOX_API_KEY` environment variable on your server:
+
+```bash
+export ISOLATE_SANDBOX_API_KEY="your-secret-api-key"
+```
+
+**Common Authentication Errors:**
+
+- **403 Forbidden**: The `X-API-Key` header is missing. Make sure you provide the `apiKey` option when creating the client.
+- **401 Unauthorized**: The API key is invalid. Verify that the key matches the one configured on the server.
 
 ## Error Handling
 

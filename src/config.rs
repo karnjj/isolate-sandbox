@@ -5,6 +5,7 @@ pub struct Config {
     pub port: u16,
     pub config_dir: PathBuf,
     pub box_pool_size: u32,
+    pub api_key: Option<String>,
 }
 
 impl Config {
@@ -24,10 +25,13 @@ impl Config {
             .and_then(|s| s.parse().ok())
             .unwrap_or(10);
 
+        let api_key = std::env::var("ISOLATE_SANDBOX_API_KEY").ok();
+
         Self {
             port,
             config_dir,
             box_pool_size,
+            api_key,
         }
     }
 }

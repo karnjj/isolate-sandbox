@@ -75,6 +75,7 @@ async fn main() -> anyhow::Result<()> {
         list_box_files_use_case,
         get_box_file_use_case,
         cleanup_box_use_case,
+        api_key: config.api_key.clone(),
     });
 
     // Create router

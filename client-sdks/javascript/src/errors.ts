@@ -36,7 +36,7 @@ export class IsolateSandboxError extends Error {
     try {
       const contentType = response.headers.get('content-type');
       if (contentType?.includes('application/json')) {
-        errorData = await response.json();
+        errorData = await response.json() as ErrorResponse;
         if (errorData?.error) {
           message = errorData.error;
         }

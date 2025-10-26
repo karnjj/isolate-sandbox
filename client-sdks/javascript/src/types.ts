@@ -13,6 +13,12 @@ export interface IsolateSandboxConfig {
    * @default 30000
    */
   timeout?: number;
+
+  /**
+   * Optional API key for authentication
+   * If provided, will be sent as X-API-Key header
+   */
+  apiKey?: string;
 }
 
 /**

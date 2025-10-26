@@ -10,6 +10,8 @@ import { IsolateSandboxClient } from '../src/index';
 async function main() {
   const client = new IsolateSandboxClient({
     baseUrl: 'http://localhost:3000',
+    // Optional: Uncomment if your API requires authentication
+    // apiKey: process.env.ISOLATE_SANDBOX_API_KEY,
   });
 
   console.log('=== IsolateSandbox Box Management Example ===\n');

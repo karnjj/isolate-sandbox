@@ -19,6 +19,7 @@ pub struct AppState {
     pub list_box_files_use_case: Arc<ListBoxFilesUseCase>,
     pub get_box_file_use_case: Arc<GetBoxFileUseCase>,
     pub cleanup_box_use_case: Arc<CleanupBoxUseCase>,
+    pub api_key: Option<String>,
 }
 
 /// Health check endpoint

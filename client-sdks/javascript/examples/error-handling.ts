@@ -10,6 +10,8 @@ async function main() {
   const client = new IsolateSandboxClient({
     baseUrl: 'http://localhost:3000',
     timeout: 5000, // Short timeout for demonstration
+    // Optional: Uncomment if your API requires authentication
+    // apiKey: process.env.ISOLATE_SANDBOX_API_KEY,
   });
 
   console.log('=== IsolateSandbox Error Handling Example ===\n');
@@ -75,8 +77,52 @@ async function main() {
   }
   console.log();
 
-  // Example 4: Connection error (wrong URL)
-  console.log('4. Testing connection error...');
+  // Example 4: Authentication errors (if API key is required)
+  console.log('4. Testing authentication errors...');
+  
+  // 4a. Missing API key
+  const noAuthClient = new IsolateSandboxClient({
+    baseUrl: 'http://localhost:3000',
+    // No apiKey provided
+  });
+  
+  try {
+    await noAuthClient.listLanguages();
+    console.log(`   Note: No authentication required on this server`);
+  } catch (error) {
+    if (error instanceof IsolateSandboxError) {
+      if (error.statusCode === 403) {
+        console.log(`   ✓ Caught 403 Forbidden (missing X-API-Key header)`);
+        console.log(`   Message: ${error.message}`);
+      } else {
+        console.log(`   Status Code: ${error.statusCode}, Message: ${error.message}`);
+      }
+    }
+  }
+  
+  // 4b. Invalid API key
+  const badAuthClient = new IsolateSandboxClient({
+    baseUrl: 'http://localhost:3000',
+    apiKey: 'invalid-api-key',
+  });
+  
+  try {
+    await badAuthClient.listLanguages();
+    console.log(`   Note: No authentication required on this server`);
+  } catch (error) {
+    if (error instanceof IsolateSandboxError) {
+      if (error.statusCode === 401) {
+        console.log(`   ✓ Caught 401 Unauthorized (invalid API key)`);
+        console.log(`   Message: ${error.message}`);
+      } else {
+        console.log(`   Status Code: ${error.statusCode}, Message: ${error.message}`);
+      }
+    }
+  }
+  console.log();
+
+  // Example 5: Connection error (wrong URL)
+  console.log('5. Testing connection error...');
   const badClient = new IsolateSandboxClient({
     baseUrl: 'http://localhost:9999', // Wrong port
     timeout: 2000,
@@ -95,8 +141,8 @@ async function main() {
   }
   console.log();
 
-  // Example 5: Proper error handling pattern
-  console.log('5. Demonstrating proper error handling pattern...');
+  // Example 6: Proper error handling pattern
+  console.log('6. Demonstrating proper error handling pattern...');
   
   async function safeExecute(language: string, code: string) {
     try {
@@ -112,10 +158,14 @@ async function main() {
         // Different handling based on status code
         if (error.statusCode === 400) {
           console.log(`   → Bad request, check your input`);
-        } else if (error.statusCode === 500) {
-          console.log(`   → Server error, try again later`);
+        } else if (error.statusCode === 401) {
+          console.log(`   → Unauthorized, check your API key`);
+        } else if (error.statusCode === 403) {
+          console.log(`   → Forbidden, API key required`);
         } else if (error.statusCode === 408) {
           console.log(`   → Request timeout, increase timeout or simplify code`);
+        } else if (error.statusCode === 500) {
+          console.log(`   → Server error, try again later`);
         }
       } else {
         // Handle unexpected errors
