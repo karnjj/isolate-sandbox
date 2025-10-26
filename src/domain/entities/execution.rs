@@ -11,6 +11,7 @@ pub struct ExecutionResult {
     pub stdout: String,
     pub stderr: String,
     pub metadata: ExecutionMetadata,
+    pub box_id: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -53,17 +53,16 @@ impl ExecuteCodeUseCase {
             metadata_path,
         };
 
-        let result = self.sandbox.execute(config).await;
+        let sandbox_result = self.sandbox.execute(config).await?;
 
-        // Always release box ID back to pool
-        let _ = self.sandbox.release_box_id(box_id).await;
-
-        let sandbox_result = result?;
+        // Note: Box ID is NOT released here anymore - it must be explicitly cleaned up
+        // via the cleanup endpoint to allow file inspection after execution
 
         Ok(ExecutionResult {
             stdout: sandbox_result.stdout,
             stderr: sandbox_result.stderr,
             metadata: sandbox_result.metadata,
+            box_id: sandbox_result.box_id,
         })
     }
 }
