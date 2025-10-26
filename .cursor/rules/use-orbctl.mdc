@@ -1,0 +1,20 @@
+---
+alwaysApply: true
+---
+
+# Use orbctl for running commands
+
+Always use the `orbctl run` prefix when running commands in this project.
+
+## Examples
+
+- Instead of: `cargo build`
+  Use: `orbctl run cargo build`
+
+- Instead of: `RUST_LOG=info cargo run`
+  Use: `orbctl run RUST_LOG=info cargo run`
+
+- Instead of: `cargo build && sudo ./target/debug/isolate-sandbox`
+  Use: `orbctl run cargo build && orbctl run sudo ./target/debug/isolate-sandbox`
+
+- Full example: `orbctl run RUST_LOG=info cargo build && orbctl run sudo RUST_LOG=info ./target/debug/isolate-sandbox`

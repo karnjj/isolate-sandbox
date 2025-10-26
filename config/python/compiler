@@ -1,0 +1,25 @@
+#!/usr/bin/bash
+
+input_file=$1
+
+parent_dir=$(dirname $input_file)
+
+# Compile the Python file and capture output
+compile_output=$(python3 -m compileall $input_file -b 2>&1)
+compile_exit_code=$?
+
+# If compilation failed, output the error message and exit
+if [ $compile_exit_code -ne 0 ]; then
+    echo "$compile_output" >&2
+    exit $compile_exit_code
+fi
+
+# Check if the compiled file exists
+compiled_file="${input_file}c"
+if [ ! -f "$compiled_file" ]; then
+    echo "Error: Compilation succeeded but compiled file not found at $compiled_file" >&2
+    exit 1
+fi
+
+# Move the compiled file to bin
+mv "$compiled_file" "$parent_dir/bin"
