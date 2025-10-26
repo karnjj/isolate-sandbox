@@ -1,0 +1,41 @@
+{
+  "name": "@isolate-sandbox/client",
+  "version": "0.1.0",
+  "description": "TypeScript/JavaScript client SDK for the IsolateSandbox API",
+  "type": "module",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "example:basic": "bun run examples/basic-usage.ts",
+    "example:box": "bun run examples/box-management.ts",
+    "example:error": "bun run examples/error-handling.ts"
+  },
+  "keywords": [
+    "sandbox",
+    "code-execution",
+    "isolate",
+    "security",
+    "typescript",
+    "sdk"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
