@@ -15,16 +15,16 @@ A TypeScript/JavaScript client SDK for the [IsolateSandbox API](../../README.md)
 
 ```bash
 # Using npm
-npm install @isolate-sandbox/client
+npx jsr add @isolate-sandbox/client
 
 # Using yarn
-yarn add @isolate-sandbox/client
+yarn add jsr:@isolate-sandbox/client
 
 # Using pnpm
-pnpm add @isolate-sandbox/client
+pnpm i jsr:isolate-sandbox/client
 
 # Using bun
-bun add @isolate-sandbox/client
+bunx jsr add @isolate-sandbox/client
 ```
 
 ## Quick Start
