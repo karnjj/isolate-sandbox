@@ -1,0 +1,9 @@
+services:
+  isolate-sandbox:
+    image: karnjj/isolate-sandbox:latest
+    container_name: isolate-sandbox
+    privileged: true
+    env_file:
+      - .env
+    ports:
+      - 3000:3000
