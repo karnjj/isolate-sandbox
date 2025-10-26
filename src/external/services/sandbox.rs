@@ -218,7 +218,11 @@ impl SandboxService for IsolateSandboxService {
         let metadata_content = self.file_system.read_to_string(&config.metadata_path).await?;
         let metadata = self.parse_metadata(&metadata_content);
 
-        // Note: Cleanup is now deferred and must be called explicitly via cleanup endpoint
+        // Clean up runtime files (bin and runner) while preserving user-created files
+        self.delete_file(config.box_id, "bin").await?;
+        self.delete_file(config.box_id, "runner").await?;
+
+        // Note: Full sandbox cleanup must be called explicitly via cleanup endpoint
 
         Ok(SandboxExecutionResult {
             stdout,
@@ -284,6 +288,25 @@ impl SandboxService for IsolateSandboxService {
         }
 
         Ok(stdout.into_bytes())
+    }
+
+    async fn delete_file(&self, box_id: u32, filename: &str) -> DomainResult<()> {
+        let file_path = PathBuf::from(format!("/var/lib/isolate/{}/box/{}", box_id, filename));
+        
+        let file_path_str = file_path
+            .to_str()
+            .ok_or_else(|| DomainError::Internal("Invalid file path".to_string()))?;
+
+        let (_, stderr, exit_code) = self
+            .process_executor
+            .execute_command("sudo", &["rm", "-f", file_path_str])
+            .await?;
+
+        if exit_code != 0 {
+            log::warn!("Failed to delete file {} from box {}: {}", filename, box_id, stderr);
+        }
+
+        Ok(())
     }
 
     async fn cleanup(&self, box_id: u32) -> DomainResult<()> {
