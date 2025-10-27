@@ -148,7 +148,12 @@ impl IsolateSandboxService {
             "--open-files=50", // 50 files
             "--processes=10", // 10 processes
             &packages_arg,
+            "--env=HOME=/box",
+            "--env=PYTHONPATH=/packages",
             &meta_arg,
+            "--run",
+            "--",
+            "runner",
         ];
 
         self.process_executor
