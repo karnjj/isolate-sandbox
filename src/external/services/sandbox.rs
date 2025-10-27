@@ -148,6 +148,7 @@ impl IsolateSandboxService {
             "--open-files=50", // 50 files
             "--processes=10", // 10 processes
             &packages_arg,
+            &meta_arg,
         ];
 
         self.process_executor
