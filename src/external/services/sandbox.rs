@@ -144,7 +144,7 @@ impl IsolateSandboxService {
             "--wall-time=10",
             "--extra-time=2",
             "--stack=128000",
-            "--processes=1",
+            "--processes=3",
             "--fsize=10240",
             "--open-files=50",
             &packages_arg,
