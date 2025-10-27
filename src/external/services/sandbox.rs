@@ -295,7 +295,7 @@ impl SandboxService for IsolateSandboxService {
 
         let (stdout, stderr, exit_code) = self
             .process_executor
-            .execute_command("sudo", &["cat", file_path_str])
+            .execute_command_binary("sudo", &["cat", file_path_str])
             .await?;
 
         if exit_code != 0 {
@@ -305,7 +305,7 @@ impl SandboxService for IsolateSandboxService {
             )));
         }
 
-        Ok(stdout.into_bytes())
+        Ok(stdout)
     }
 
     async fn delete_file(&self, box_id: u32, filename: &str) -> DomainResult<()> {
