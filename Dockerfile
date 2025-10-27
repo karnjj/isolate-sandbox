@@ -29,12 +29,13 @@ RUN cargo build --locked --release
 FROM debian-base AS runtime
 
 # install python 
-RUN apt-get update && apt-get install -y python3 python3-pip
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv
 
 # install isolate
 RUN curl https://www.ucw.cz/isolate/debian/signing-key.asc | gpg --dearmor -o /etc/apt/keyrings/isolate.gpg
 RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/isolate.gpg] http://www.ucw.cz/isolate/debian/ bookworm-isolate main" | tee /etc/apt/sources.list.d/isolate.list
 RUN apt update && apt install -y isolate
+RUN sed -i 's@^cg_root .*@cg_root = /sys/fs/cgroup@' /etc/isolate
 
 FROM runtime
 

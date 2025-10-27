@@ -3,6 +3,7 @@ services:
     image: karnjj/isolate-sandbox:latest
     container_name: isolate-sandbox
     privileged: true
+    cgroup: host
     env_file:
       - .env
     ports:
