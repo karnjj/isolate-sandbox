@@ -138,15 +138,15 @@ impl IsolateSandboxService {
             "-b",
             &box_id_str,
             "--cg",
-            "--cg-mem=524288", // 512MB
-            "--mem=512000", // 512MB
-            "--time=30", // 30 seconds
-            "--wall-time=60", // 60 seconds
-            "--extra-time=10", // 10 seconds
-            "--stack=128000", // 128KB
-            "--fsize=102400", // 100MB
-            "--open-files=50", // 50 files
-            "--processes=10", // 10 processes
+            // "--cg-mem=524288", // 512MB
+            // "--mem=512000", // 512MB
+            // "--time=30", // 30 seconds
+            // "--wall-time=60", // 60 seconds
+            // "--extra-time=10", // 10 seconds
+            // "--stack=128000", // 128KB
+            // "--fsize=102400", // 100MB
+            // "--open-files=50", // 50 files
+            "--processes", // unlimited processes
             &packages_arg,
             "--env=HOME=/box",
             "--env=PYTHONPATH=/packages",
