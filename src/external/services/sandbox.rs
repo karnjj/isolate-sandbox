@@ -145,7 +145,7 @@ impl IsolateSandboxService {
             // "--extra-time=10", // 10 seconds
             // "--stack=128000", // 128KB
             // "--fsize=102400", // 100MB
-            // "--open-files=50", // 50 files
+            "--open-files=0", // unlimited files
             "--processes", // unlimited processes
             &packages_arg,
             "--env=HOME=/box",
