@@ -192,32 +192,50 @@ impl IsolateSandboxService {
 impl SandboxService for IsolateSandboxService {
     async fn execute(&self, config: SandboxExecutionConfig) -> DomainResult<SandboxExecutionResult> {
         // Initialize sandbox
+        log::debug!("Initializing sandbox for box ID: {}", config.box_id);
         self.init_sandbox(config.box_id).await?;
+        log::debug!("Sandbox initialized successfully for box ID: {}", config.box_id);
 
         // Copy binary and runner to sandbox
+        log::debug!("Copying binary to sandbox: {:?}", config.binary_path);
         self.copy_to_sandbox(config.box_id, &config.binary_path, "bin")
             .await?;
+        log::debug!("Binary copied successfully");
+
+        log::debug!("Copying runner to sandbox: {:?}", config.runner_path);
         self.copy_to_sandbox(config.box_id, &config.runner_path, "runner")
             .await?;
+        log::debug!("Runner copied successfully");
 
         // Get site packages path
+        log::debug!("Getting site packages path for language: {}", config.language.name);
         let site_packages = self.get_site_packages_path(&config.language.name)?;
+        log::debug!("Found site packages path: {}", site_packages);
 
         // Execute in sandbox
+        log::debug!("Running code in sandbox with box ID: {}", config.box_id);
         let (stdout, stderr, _exit_code) = self
             .run_in_sandbox(config.box_id, &site_packages, &config.metadata_path)
             .await?;
+        log::debug!("Code execution completed in sandbox");
 
         // Parse metadata
+        log::debug!("Parsing execution metadata from: {:?}", config.metadata_path);
         let metadata_content = self.file_system.read_to_string(&config.metadata_path).await?;
         let metadata = self.parse_metadata(&metadata_content);
+        log::debug!("Metadata parsed: time={}s, time_wall={}s, memory={}KB, status={}", 
+                   metadata.time, metadata.time_wall, metadata.memory, metadata.status);
 
         // Clean up runtime files (bin and runner) while preserving user-created files
+        log::debug!("Cleaning up runtime files in sandbox");
         self.delete_file(config.box_id, "bin").await?;
         self.delete_file(config.box_id, "runner").await?;
+        log::debug!("Runtime files cleaned up");
 
         // Note: Full sandbox cleanup must be called explicitly via cleanup endpoint
 
+        log::debug!("Sandbox execution result ready with {} bytes stdout, {} bytes stderr", 
+                   stdout.len(), stderr.len());
         Ok(SandboxExecutionResult {
             stdout,
             stderr,
