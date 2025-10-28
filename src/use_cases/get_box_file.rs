@@ -11,8 +11,8 @@ impl GetBoxFileUseCase {
         Self { sandbox }
     }
 
-    pub async fn execute(&self, box_id: u32, filename: &str) -> DomainResult<Vec<u8>> {
-        self.sandbox.get_file(box_id, filename).await
+    pub async fn execute(&self, box_id: u32, filename: &str) -> DomainResult<String> {
+        self.sandbox.get_file_base64(box_id, filename).await
     }
 }
 

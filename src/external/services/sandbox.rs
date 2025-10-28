@@ -138,11 +138,11 @@ impl IsolateSandboxService {
             "-b",
             &box_id_str,
             "--cg",
-            "--cg-mem=524288", // 512MB
-            "--mem=512000", // 512MB
-            "--time=30", // 30 seconds
-            "--wall-time=60", // 60 seconds
-            "--extra-time=10", // 10 seconds
+            // "--cg-mem=524288", // 512MB
+            // "--mem=512000", // 512MB
+            // "--time=30", // 30 seconds
+            // "--wall-time=60", // 60 seconds
+            // "--extra-time=10", // 10 seconds
             // "--stack=128000", // 128KB
             // "--fsize=102400", // 100MB
             "--open-files=0", // unlimited files
@@ -286,16 +286,16 @@ impl SandboxService for IsolateSandboxService {
         Ok(files)
     }
 
-    async fn get_file(&self, box_id: u32, filename: &str) -> DomainResult<Vec<u8>> {
+    async fn get_file_base64(&self, box_id: u32, filename: &str) -> DomainResult<String> {
         let file_path = PathBuf::from(format!("/var/lib/isolate/{}/box/{}", box_id, filename));
         
         let file_path_str = file_path
             .to_str()
             .ok_or_else(|| DomainError::Internal("Invalid file path".to_string()))?;
 
-        let (stdout, stderr, exit_code) = self
+        let (base64_content, stderr, exit_code) = self
             .process_executor
-            .execute_command_binary("sudo", &["cat", file_path_str])
+            .execute_command("sudo", &["base64 -w 0", file_path_str])
             .await?;
 
         if exit_code != 0 {
@@ -305,7 +305,7 @@ impl SandboxService for IsolateSandboxService {
             )));
         }
 
-        Ok(stdout)
+        Ok(base64_content)
     }
 
     async fn delete_file(&self, box_id: u32, filename: &str) -> DomainResult<()> {

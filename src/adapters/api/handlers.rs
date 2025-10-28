@@ -130,7 +130,7 @@ pub async fn list_box_files_handler(
 
 /// Get a file from a sandbox box
 ///
-/// Returns the content of a specific file from the sandbox box
+/// Returns the content of a specific file from the sandbox box (base64 encoded)
 #[utoipa::path(
     get,
     path = "/boxes/{box_id}/files/{filename}",
@@ -148,14 +148,12 @@ pub async fn get_box_file_handler(
     State(state): State<Arc<AppState>>,
     Path((box_id, filename)): Path<(u32, String)>,
 ) -> Result<Json<BoxFileResponse>, ApiError> {
-    let content_bytes = state
+    let content_base64 = state
         .get_box_file_use_case
         .execute(box_id, &filename)
         .await?;
 
-    let content = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, content_bytes);
-
-    Ok(Json(BoxFileResponse { content, filename }))
+    Ok(Json(BoxFileResponse { content: content_base64, filename }))
 }
 
 /// Cleanup a sandbox box
