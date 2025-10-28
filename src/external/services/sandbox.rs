@@ -295,7 +295,7 @@ impl SandboxService for IsolateSandboxService {
 
         let (base64_content, stderr, exit_code) = self
             .process_executor
-            .execute_command("sudo", &["base64 -w 0", file_path_str])
+            .execute_command("sudo", &["/usr/bin/base64 -w 0", file_path_str])
             .await?;
 
         if exit_code != 0 {
