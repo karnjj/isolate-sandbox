@@ -4,6 +4,7 @@ use crate::domain::services::{SandboxExecutionConfig, SandboxExecutionResult, Sa
 use crate::external::file_system::FileSystem;
 use crate::external::process::ProcessExecutor;
 use crate::external::services::box_pool::BoxPool;
+use crate::config::SandboxConfig;
 use async_trait::async_trait;
 use regex::Regex;
 use std::path::PathBuf;
@@ -13,14 +14,16 @@ pub struct IsolateSandboxService {
     box_pool: Arc<BoxPool>,
     process_executor: ProcessExecutor,
     file_system: FileSystem,
+    config: SandboxConfig,
 }
 
 impl IsolateSandboxService {
-    pub fn new(pool_size: u32) -> Self {
+    pub fn new(pool_size: u32, config: SandboxConfig) -> Self {
         Self {
             box_pool: Arc::new(BoxPool::new(pool_size)),
             process_executor: ProcessExecutor::new(),
             file_system: FileSystem::new(),
+            config,
         }
     }
 
@@ -133,31 +136,62 @@ impl IsolateSandboxService {
         let packages_arg = format!("--dir=/packages={}", site_packages);
         let meta_arg = format!("--meta={}", meta_path_str);
 
-        let args = vec![
-            "isolate",
-            "-b",
-            &box_id_str,
-            "--cg",
-            // "--cg-mem=524288", // 512MB
-            // "--mem=512000", // 512MB
-            // "--time=30", // 30 seconds
-            // "--wall-time=60", // 60 seconds
-            // "--extra-time=10", // 10 seconds
-            // "--stack=128000", // 128KB
-            // "--fsize=102400", // 100MB
-            "--open-files=0", // unlimited files
-            "--processes", // unlimited processes
-            &packages_arg,
-            "--env=HOME=/box",
-            "--env=PYTHONPATH=/packages",
-            &meta_arg,
-            "--run",
-            "--",
-            "runner",
+        // Build base arguments
+        let mut args: Vec<String> = vec![
+            "isolate".to_string(),
+            "-b".to_string(),
+            box_id_str,
+            "--cg".to_string(),
         ];
 
+        // Add resource limits conditionally
+        if self.config.default_cg_mem > 0 {
+            args.push(format!("--cg-mem={}", self.config.default_cg_mem));
+        }
+        if self.config.default_mem > 0 {
+            args.push(format!("--mem={}", self.config.default_mem));
+        }
+        if self.config.default_time > 0 {
+            args.push(format!("--time={}", self.config.default_time));
+        }
+        if self.config.default_wall_time > 0 {
+            args.push(format!("--wall-time={}", self.config.default_wall_time));
+        }
+        if self.config.default_extra_time > 0 {
+            args.push(format!("--extra-time={}", self.config.default_extra_time));
+        }
+        if self.config.default_stack > 0 {
+            args.push(format!("--stack={}", self.config.default_stack));
+        }
+        if self.config.default_fsize > 0 {
+            args.push(format!("--fsize={}", self.config.default_fsize));
+        }
+        if self.config.default_open_files > 0 {
+            args.push(format!("--open-files={}", self.config.default_open_files));
+        } else {
+            args.push("--open-files=0".to_string()); // unlimited files
+        }
+
+        // Special handling for processes: 0 means unlimited (use --processes without value)
+        if self.config.default_processes > 0 {
+            args.push(format!("--processes={}", self.config.default_processes));
+        } else {
+            args.push("--processes".to_string()); // unlimited processes
+        }
+
+        // Add remaining arguments
+        args.extend([
+            packages_arg,
+            "--env=HOME=/box".to_string(),
+            "--env=PYTHONPATH=/packages".to_string(),
+            meta_arg,
+            "--run".to_string(),
+            "--".to_string(),
+            "runner".to_string(),
+        ]);
+
         self.process_executor
-            .execute_command("sudo", &args)
+            .execute_command("sudo", &args.iter().map(|s| s.as_str()).collect::<Vec<_>>())
             .await
     }
 

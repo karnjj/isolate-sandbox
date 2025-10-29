@@ -52,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
     // Initialize services
     log::info!("Initializing services...");
     let compiler_service = Arc::new(CompilerServiceImpl::new());
-    let sandbox_service = Arc::new(IsolateSandboxService::new(config.box_pool_size));
+    let sandbox_service = Arc::new(IsolateSandboxService::new(config.box_pool_size, config.sandbox));
 
     // Initialize use cases
     log::info!("Initializing use cases...");
