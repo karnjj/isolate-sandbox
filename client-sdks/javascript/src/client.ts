@@ -140,7 +140,10 @@ export class IsolateSandboxClient {
    */
   async getBoxFile(
     boxId: number,
-    filename: string
+    filename: string,
+    options?: {
+      encoding?: BufferEncoding;
+    }
   ): Promise<{ content: string; filename: string }> {
     const response = await this.request<BoxFileResponse>(
       `/boxes/${boxId}/files/${encodeURIComponent(filename)}`,
@@ -150,7 +153,7 @@ export class IsolateSandboxClient {
     );
 
     // Decode base64 content
-    const decoded = this.decodeBase64(response.content);
+    const decoded = this.decodeBase64(response.content, options?.encoding);
 
     return {
       content: decoded,
@@ -190,11 +193,11 @@ export class IsolateSandboxClient {
    * Decode base64 string to UTF-8
    * Works in both Node.js and browsers
    */
-  private decodeBase64(base64: string): string {
+  private decodeBase64(base64: string, encoding?: BufferEncoding): string {
     // Check if we're in Node.js or browser
     if (typeof Buffer !== 'undefined') {
       // Node.js
-      return Buffer.from(base64, 'base64').toString('utf-8');
+      return Buffer.from(base64, 'base64').toString(encoding);
     } else {
       // Browser
       return atob(base64);
